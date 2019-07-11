@@ -1,4 +1,16 @@
 # Changelog
+## [1.0.5] - 2019-10-20
+### Changed
+- update readme
+### Added
+- example folder 
+## [1.0.4] - 2019-10-20
+### Removed
+- Dependencies not related to the lib (http)
+- All examples files
+### Changed
+- make get value private members
+- update readme
 ## [1.0.3] - 2019-07-11
 ### Added
 - cond function in Either
