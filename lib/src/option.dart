@@ -2,11 +2,14 @@ import 'package:either_option/src/either.dart';
 
 ///Simple Option monad implementation
 abstract class Option<A> {
-  /// Return [None] Option
-  static Option<A> empty<A>() => _none();
+  /// The [None] Option
+  static final Option<Null> none = None();
+
+  /// Return [None] Option coerced to the desired
+  static Option<A> empty<A>() => none;
 
   /// Return [None] if null else [Some] of A
-  static Option<A> of<A>(A a) => a != null ? _some(a) : _none();
+  static Option<A> of<A>(A a) => a != null ? Some(a) : none;
 
   /// Applies [onNone] if this is a [None] or [onSome] if this is a [Some] of A
   Z fold<Z>(Z Function() onNone, Z Function(A a) onSome);
@@ -25,14 +28,15 @@ abstract class Option<A> {
       fold(() => caseElse, (A a) => this); // or  (A a) => some(a)
 
   /// Return Some of Application of [f] on [a] inside [Some] if [isDefined] else None
-  Option<Z> map<Z>(Z Function(A a) f) => fold(_none, (A a) => _some(f(a)));
+  Option<Z> map<Z>(Z Function(A a) f) => fold(() => none, (A a) => Some(f(a)));
 
   /// Return Application of [f] on [a] inside [Some] if [isDefined] else `None`
-  Option<Z> flatMap<Z>(Option<Z> Function(A a) f) => fold(_none, (A a) => f(a));
+  Option<Z> flatMap<Z>(Option<Z> Function(A a) f) =>
+      fold(() => none, (A a) => f(a));
 
   /// Return current [Option] if it's nonempty and [predicate] application return true. Otherwise return [None]
   Option<A> filter(bool Function(A a) predicate) =>
-      (this.isEmpty || predicate((this as Some).value)) ? this : _none();
+      (this.isEmpty || predicate((this as Some).value)) ? this : none;
 
   /// Return [true] if this option is nonempty and the predicate returns true Otherwise return [false]
   bool exists(bool Function(A a) predicate) =>
@@ -40,7 +44,7 @@ abstract class Option<A> {
 
   /// If the condition is satify then return [value] in [Some] else None
   static Option<A> cond<A>(bool test, A value) =>
-      test ? Option.of(value) : _none();
+      test ? Option.of(value) : none;
 
   /// Return [Left] from Option
   Either<A, A> toLeft(A caseNone) =>
@@ -74,16 +78,17 @@ class Some<A> extends Option<A> {
   Z fold<Z>(Z Function() onNone, Z Function(A a) onSome) => onSome(_a);
 }
 
-class None<A> extends Option<A> {
-  @override
-  bool operator ==(that) => that is None;
+// None is an Option<Null> which makes it a subtype of any Option<A>.
+// None follows the singleton pattern to avoid generating redundant instances.
+class None extends Option<Null> {
+  None._privateConstructor();
+
+  static final None theInstance = None._privateConstructor();
+
+  factory None() {
+    return theInstance;
+  }
 
   @override
-  int get hashCode => 0;
-
-  @override
-  Z fold<Z>(Z Function() onNone, Z Function(A a) onSome) => onNone();
+  Z fold<Z>(Z Function() onNone, Z Function(Null a) onSome) => onNone();
 }
-
-Option<A> _some<A>(A a) => Some(a);
-Option<A> _none<A>() => None();
